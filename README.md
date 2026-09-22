@@ -291,6 +291,42 @@ actually depends on.
 
 ---
 
+## Hosting the dashboard
+
+The repository is self-contained: `data/processed/windows.parquet` already
+carries `predicted_state` and `drop_probability`, so a deployment needs no
+pipeline run and **no model files**. That is deliberate — the fitted random
+forest is 122 MB, past GitHub's 100 MB file limit, and a dashboard only needs
+the predictions, not the estimator that produced them.
+
+To deploy on [Streamlit Community Cloud](https://share.streamlit.io) (free):
+
+1. Open <https://share.streamlit.io/deploy?repository=anubhav1021%2Ffocustrack&branch=master&mainModule=src%2Ffocustrack%2Fdashboard%2Fapp.py>
+2. Sign in with GitHub and authorise Streamlit to read the repository.
+3. Confirm the settings — they arrive prefilled:
+
+   | Field | Value |
+   |---|---|
+   | Repository | `anubhav1021/focustrack` |
+   | Branch | `master` |
+   | Main file path | `src/focustrack/dashboard/app.py` |
+   | Python version | 3.11 – 3.13 |
+
+4. Click **Deploy**. The first build takes a few minutes while the
+   dependencies install.
+
+`requirements.txt` is kept free of `pynput` and `plyer` for this reason: they
+are desktop-only, and a headless host can neither use nor reliably install
+them. The agent extras stay available through `pip install -e ".[agent]"`.
+
+To run the same thing locally:
+
+```bash
+focustrack dashboard --port 8507
+```
+
+---
+
 ## Configuration
 
 Every tunable number lives in [`config.yaml`](config.yaml) — the behaviour
