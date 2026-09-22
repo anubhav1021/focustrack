@@ -1,0 +1,14 @@
+# Matches the palette in focustrack/evaluation/figures.py, so a state is the
+# same colour on screen as it is in the report figures.
+[theme]
+base = "light"
+primaryColor = "#2f6f4e"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f7f9"
+textColor = "#1d2433"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

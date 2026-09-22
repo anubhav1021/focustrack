@@ -1,0 +1,29 @@
+{
+  "n_users": 40,
+  "n_workdays": 20,
+  "n_user_days": 775,
+  "n_minute_records": 383478,
+  "n_applications": 37,
+  "state_distribution": {
+    "Focused": 0.6566035078935428,
+    "Distracted": 0.10235528504894674,
+    "Break": 0.10076458101898936,
+    "Meeting": 0.14027662603852112
+  },
+  "survey_response_rate": 0.9161290322580645,
+  "corruption": {
+    "tz_broken_users": [
+      "U013"
+    ],
+    "tz_shifted_rows": 9903,
+    "duplicate_rows": 3097,
+    "impossible_values": 1144,
+    "dropout_gaps": 89,
+    "dropout_rows": 1227,
+    "hiccup_gaps": 546,
+    "hiccup_rows": 840,
+    "rows_before": 383478,
+    "rows_after": 384508
+  },
+  "elapsed_seconds": 5.67
+}

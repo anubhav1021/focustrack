@@ -1,0 +1,157 @@
+{
+  "minute_rows": 383404,
+  "windows": 76436,
+  "labelled_windows": 76436,
+  "n_features": 31,
+  "users": 40,
+  "user_days": 775,
+  "state_distribution": {
+    "Focused": 0.6424328850279972,
+    "Meeting": 0.1386257784290125,
+    "Distracted": 0.1190407661311424,
+    "Break": 0.09990057041184781
+  },
+  "steps": [
+    {
+      "step": 1,
+      "name": "validate schema and types",
+      "rows_in": 384508,
+      "rows_out": 384508,
+      "affected": 0,
+      "detail": {
+        "unparseable_timestamps": 0
+      }
+    },
+    {
+      "step": 2,
+      "name": "repair UTC timestamps",
+      "rows_in": 384508,
+      "rows_out": 384508,
+      "affected": 9971,
+      "detail": {
+        "broken_agents": [
+          "U013"
+        ],
+        "median_start_hour": {
+          "U013": 2.8
+        }
+      }
+    },
+    {
+      "step": 3,
+      "name": "drop duplicate uploads",
+      "rows_in": 384508,
+      "rows_out": 381411,
+      "affected": 3097,
+      "detail": {
+        "removed": 3097
+      }
+    },
+    {
+      "step": 4,
+      "name": "impossible values to missing",
+      "rows_in": 381411,
+      "rows_out": 381411,
+      "affected": 1144,
+      "detail": {
+        "stuck_keys": 381,
+        "idle_out_of_range": 381,
+        "negative_counts": 382
+      }
+    },
+    {
+      "step": 5,
+      "name": "fill short gaps, keep long ones",
+      "rows_in": 381411,
+      "rows_out": 383404,
+      "affected": 827,
+      "detail": {
+        "short_gaps": 537,
+        "filled_rows": 827,
+        "long_gaps": 86,
+        "long_gap_rows": 1166
+      }
+    },
+    {
+      "step": 6,
+      "name": "protect label integrity",
+      "rows_in": 383404,
+      "rows_out": 383404,
+      "affected": 1993,
+      "detail": {
+        "unlabelled_rows": 1993
+      }
+    },
+    {
+      "step": 7,
+      "name": "group apps into 6 categories",
+      "rows_in": 383404,
+      "rows_out": 383404,
+      "affected": 37,
+      "detail": {
+        "distinct_apps": 37,
+        "category_counts": {
+          "communication": 108161,
+          "docs_analysis": 82966,
+          "development": 64872,
+          "research": 63647,
+          "creative": 40434,
+          "personal": 22246,
+          "unknown": 1078
+        }
+      }
+    },
+    {
+      "step": 8,
+      "name": "detect breaks (3+ idle minutes)",
+      "rows_in": 383404,
+      "rows_out": 383404,
+      "affected": 38954,
+      "detail": {
+        "idle_minutes": 51212,
+        "break_minutes": 38954,
+        "break_episodes": 4239,
+        "mean_break_minutes": 9.19
+      }
+    },
+    {
+      "step": 9,
+      "name": "normalise counts within each user",
+      "rows_in": 383404,
+      "rows_out": 383404,
+      "affected": 40,
+      "detail": {
+        "method": "robust",
+        "users": 40,
+        "median_scale": {
+          "keystrokes": 71.5,
+          "mouse_clicks": 11.5,
+          "mouse_distance_px": 15049.9,
+          "scroll_events": 13.5
+        }
+      }
+    },
+    {
+      "step": 10,
+      "name": "group into 5-minute windows",
+      "rows_in": 383404,
+      "rows_out": 76436,
+      "affected": 692,
+      "detail": {
+        "windows_before_drop": 77128,
+        "sparse_windows_dropped": 692,
+        "labelled_windows": 76436
+      }
+    },
+    {
+      "step": 11,
+      "name": "build the 31-feature window table",
+      "rows_in": 383404,
+      "rows_out": 76436,
+      "affected": 31,
+      "detail": {
+        "n_features": 31
+      }
+    }
+  ]
+}

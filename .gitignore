@@ -10,24 +10,48 @@ dist/
 htmlcov/
 
 # --- generated artefacts ----------------------------------------------------
-# Everything below is reproducible with `focustrack all`, so none of it is
-# tracked. The .gitkeep files preserve the directory layout.
+# Everything here is reproducible with `focustrack all`. The exceptions below
+# are the small, scored artefacts the hosted dashboard reads at runtime, so a
+# deployment needs no pipeline run and no model files.
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/users.csv
+!data/raw/daily_survey.csv
+!data/raw/dataset_manifest.json
+
 data/interim/*
 !data/interim/.gitkeep
+
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/windows.parquet
+!data/processed/user_split.json
+
+# The fitted models are large - the random forest alone is over 100 MB, past
+# GitHub's file limit - and the dashboard does not need them: `focustrack
+# evaluate` writes the predictions into windows.parquet.
 models/*
 !models/.gitkeep
+!models/model_metadata.json
+
 reports/*
 !reports/figures/
+!reports/results.json
+!reports/results.md
+!reports/preprocessing_audit.json
+!reports/daily_summary.csv
+!reports/notifications.csv
 reports/figures/*
 !reports/figures/.gitkeep
+!reports/figures/*.png
+
+# The two full activity logs are ~24 MB each and are pure simulator output.
+data/raw/raw_activity_logs.csv
+data/raw/clean_activity_logs.csv
 
 # --- the user's own data ----------------------------------------------------
 # The live agent's store holds a minute-by-minute record of someone's working
-# day. It never belongs in version control.
+# day, plus its decryption key. Neither ever belongs in version control.
 focustrack_store/
 *.db
 *.db-wal

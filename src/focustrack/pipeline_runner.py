@@ -47,7 +47,9 @@ from focustrack.models.focus_drop import DROP_LABEL, build_drop_labels, train_fo
 from focustrack.models.focus_state import FocusStateResult, train_focus_state
 from focustrack.models.registry import load_bundle, save_bundle
 from focustrack.preprocessing.features import feature_matrix
+from focustrack.io_utils import write_parquet
 from focustrack.preprocessing.pipeline import (
+    WINDOWS_FILE,
     PipelineResult,
     load_minutes,
     load_windows,
@@ -179,6 +181,14 @@ def stage_evaluate(
     features = feature_matrix(scored)
     scored["predicted_state"] = bundle.focus_state.predict(features)
     scored["drop_probability"] = bundle.focus_drop.predict_proba(features)[:, 1]
+
+    # Persist the scored table. It is what the dashboard reads, and shipping
+    # predictions rather than a 100 MB forest is what makes the dashboard
+    # deployable.
+    write_parquet(
+        scored.assign(state_label=scored["state_label"].astype("string")),
+        cfg.path("processed") / WINDOWS_FILE,
+    )
 
     test = scored.loc[scored["user_id"].isin(split.test_users)].reset_index(drop=True)
 

@@ -1,0 +1,617 @@
+{
+  "dataset": {
+    "n_users": 40,
+    "n_workdays": 20,
+    "n_user_days": 775,
+    "n_minute_records": 383478,
+    "n_applications": 37,
+    "state_distribution": {
+      "Focused": 0.6566035078935428,
+      "Distracted": 0.10235528504894674,
+      "Break": 0.10076458101898936,
+      "Meeting": 0.14027662603852112
+    },
+    "survey_response_rate": 0.9161290322580645,
+    "corruption": {
+      "tz_broken_users": [
+        "U013"
+      ],
+      "tz_shifted_rows": 9903,
+      "duplicate_rows": 3097,
+      "impossible_values": 1144,
+      "dropout_gaps": 89,
+      "dropout_rows": 1227,
+      "hiccup_gaps": 546,
+      "hiccup_rows": 840,
+      "rows_before": 383478,
+      "rows_after": 384508
+    },
+    "elapsed_seconds": 5.67
+  },
+  "preprocessing": {
+    "minute_rows": 383404,
+    "windows": 76436,
+    "labelled_windows": 76436,
+    "n_features": 31,
+    "users": 40,
+    "user_days": 775,
+    "state_distribution": {
+      "Focused": 0.6424328850279972,
+      "Meeting": 0.1386257784290125,
+      "Distracted": 0.1190407661311424,
+      "Break": 0.09990057041184781
+    },
+    "steps": [
+      {
+        "step": 1,
+        "name": "validate schema and types",
+        "rows_in": 384508,
+        "rows_out": 384508,
+        "affected": 0,
+        "detail": {
+          "unparseable_timestamps": 0
+        }
+      },
+      {
+        "step": 2,
+        "name": "repair UTC timestamps",
+        "rows_in": 384508,
+        "rows_out": 384508,
+        "affected": 9971,
+        "detail": {
+          "broken_agents": [
+            "U013"
+          ],
+          "median_start_hour": {
+            "U013": 2.8
+          }
+        }
+      },
+      {
+        "step": 3,
+        "name": "drop duplicate uploads",
+        "rows_in": 384508,
+        "rows_out": 381411,
+        "affected": 3097,
+        "detail": {
+          "removed": 3097
+        }
+      },
+      {
+        "step": 4,
+        "name": "impossible values to missing",
+        "rows_in": 381411,
+        "rows_out": 381411,
+        "affected": 1144,
+        "detail": {
+          "stuck_keys": 381,
+          "idle_out_of_range": 381,
+          "negative_counts": 382
+        }
+      },
+      {
+        "step": 5,
+        "name": "fill short gaps, keep long ones",
+        "rows_in": 381411,
+        "rows_out": 383404,
+        "affected": 827,
+        "detail": {
+          "short_gaps": 537,
+          "filled_rows": 827,
+          "long_gaps": 86,
+          "long_gap_rows": 1166
+        }
+      },
+      {
+        "step": 6,
+        "name": "protect label integrity",
+        "rows_in": 383404,
+        "rows_out": 383404,
+        "affected": 1993,
+        "detail": {
+          "unlabelled_rows": 1993
+        }
+      },
+      {
+        "step": 7,
+        "name": "group apps into 6 categories",
+        "rows_in": 383404,
+        "rows_out": 383404,
+        "affected": 37,
+        "detail": {
+          "distinct_apps": 37,
+          "category_counts": {
+            "communication": 108161,
+            "docs_analysis": 82966,
+            "development": 64872,
+            "research": 63647,
+            "creative": 40434,
+            "personal": 22246,
+            "unknown": 1078
+          }
+        }
+      },
+      {
+        "step": 8,
+        "name": "detect breaks (3+ idle minutes)",
+        "rows_in": 383404,
+        "rows_out": 383404,
+        "affected": 38954,
+        "detail": {
+          "idle_minutes": 51212,
+          "break_minutes": 38954,
+          "break_episodes": 4239,
+          "mean_break_minutes": 9.19
+        }
+      },
+      {
+        "step": 9,
+        "name": "normalise counts within each user",
+        "rows_in": 383404,
+        "rows_out": 383404,
+        "affected": 40,
+        "detail": {
+          "method": "robust",
+          "users": 40,
+          "median_scale": {
+            "keystrokes": 71.5,
+            "mouse_clicks": 11.5,
+            "mouse_distance_px": 15049.9,
+            "scroll_events": 13.5
+          }
+        }
+      },
+      {
+        "step": 10,
+        "name": "group into 5-minute windows",
+        "rows_in": 383404,
+        "rows_out": 76436,
+        "affected": 692,
+        "detail": {
+          "windows_before_drop": 77128,
+          "sparse_windows_dropped": 692,
+          "labelled_windows": 76436
+        }
+      },
+      {
+        "step": 11,
+        "name": "build the 31-feature window table",
+        "rows_in": 383404,
+        "rows_out": 76436,
+        "affected": 31,
+        "detail": {
+          "n_features": 31
+        }
+      }
+    ]
+  },
+  "focus_state": {
+    "best_model": "Random Forest",
+    "selection_metric": "macro_f1",
+    "labels": [
+      "Focused",
+      "Distracted",
+      "Break",
+      "Meeting"
+    ],
+    "scores": [
+      {
+        "name": "Rule-based heuristic",
+        "accuracy": 0.8038,
+        "macro_f1": 0.7048,
+        "f1_distracted": 0.4336,
+        "per_class_f1": {
+          "Focused": 0.8622,
+          "Distracted": 0.4336,
+          "Break": 0.6136,
+          "Meeting": 0.9099
+        },
+        "cv_macro_f1_mean": null,
+        "cv_macro_f1_std": null,
+        "accuracy_single_state": 0.9674,
+        "accuracy_mixed_state": 0.2016
+      },
+      {
+        "name": "Logistic Regression",
+        "accuracy": 0.8343,
+        "macro_f1": 0.8111,
+        "f1_distracted": 0.5856,
+        "per_class_f1": {
+          "Focused": 0.8704,
+          "Distracted": 0.5856,
+          "Break": 0.8624,
+          "Meeting": 0.9258
+        },
+        "cv_macro_f1_mean": 0.8102,
+        "cv_macro_f1_std": 0.0045,
+        "accuracy_single_state": 0.9201,
+        "accuracy_mixed_state": 0.5186
+      },
+      {
+        "name": "Random Forest",
+        "accuracy": 0.9402,
+        "macro_f1": 0.9244,
+        "f1_distracted": 0.7776,
+        "per_class_f1": {
+          "Focused": 0.9569,
+          "Distracted": 0.7776,
+          "Break": 0.9814,
+          "Meeting": 0.9819
+        },
+        "cv_macro_f1_mean": 0.9185,
+        "cv_macro_f1_std": 0.0036,
+        "accuracy_single_state": 0.9802,
+        "accuracy_mixed_state": 0.7931
+      },
+      {
+        "name": "Gradient Boosting",
+        "accuracy": 0.9316,
+        "macro_f1": 0.9182,
+        "f1_distracted": 0.7575,
+        "per_class_f1": {
+          "Focused": 0.9495,
+          "Distracted": 0.7575,
+          "Break": 0.9841,
+          "Meeting": 0.9819
+        },
+        "cv_macro_f1_mean": 0.9165,
+        "cv_macro_f1_std": 0.0054,
+        "accuracy_single_state": 0.961,
+        "accuracy_mixed_state": 0.8234
+      }
+    ],
+    "confusion_matrix": [
+      [
+        11831,
+        669,
+        23,
+        14
+      ],
+      [
+        326,
+        1853,
+        31,
+        5
+      ],
+      [
+        5,
+        2,
+        1921,
+        1
+      ],
+      [
+        30,
+        27,
+        11,
+        2391
+      ]
+    ],
+    "top_features": [
+      {
+        "feature": "scroll_events_mean",
+        "importance": 0.10073414472157119,
+        "std": 0.0021500497837306093
+      },
+      {
+        "feature": "app_frac_communication",
+        "importance": 0.09254004936027138,
+        "std": 0.001519209642639436
+      },
+      {
+        "feature": "idle_max",
+        "importance": 0.05514223312807709,
+        "std": 0.0010421222537897957
+      },
+      {
+        "feature": "app_frac_personal",
+        "importance": 0.053206105769303805,
+        "std": 0.0008304451540580442
+      },
+      {
+        "feature": "activity_index_std",
+        "importance": 0.015239741415141816,
+        "std": 0.0010380502442786288
+      },
+      {
+        "feature": "keystrokes_max",
+        "importance": 0.010047289818817662,
+        "std": 0.0002463249722461591
+      },
+      {
+        "feature": "window_switches_sum",
+        "importance": 0.00860623391979376,
+        "std": 0.0009030802889474623
+      },
+      {
+        "feature": "idle_mean",
+        "importance": 0.007554710521500474,
+        "std": 0.0006802237246823296
+      },
+      {
+        "feature": "n_unique_apps",
+        "importance": 0.00711542523641473,
+        "std": 0.0009330124673062252
+      },
+      {
+        "feature": "break_minutes",
+        "importance": 0.0061644492130869645,
+        "std": 0.0005241949068391477
+      },
+      {
+        "feature": "mouse_clicks_mean",
+        "importance": 0.003682084408772224,
+        "std": 0.0008590982527670193
+      },
+      {
+        "feature": "idle_frac",
+        "importance": 0.0035560784375067824,
+        "std": 0.000376176518565082
+      }
+    ],
+    "signal_groups": [
+      {
+        "group": "idle signal",
+        "n_features": 5,
+        "importance": 0.2499689156669646,
+        "std": 0.0018238636708937564
+      },
+      {
+        "group": "application mix",
+        "n_features": 7,
+        "importance": 0.24162596757486615,
+        "std": 0.0015370293667503962
+      },
+      {
+        "group": "switching load",
+        "n_features": 5,
+        "importance": 0.10503183390249098,
+        "std": 0.0016160664646936763
+      },
+      {
+        "group": "mouse and scroll",
+        "n_features": 3,
+        "importance": 0.09043337775234712,
+        "std": 0.001472050534230058
+      },
+      {
+        "group": "break signals",
+        "n_features": 2,
+        "importance": 0.023460801493159367,
+        "std": 0.0009322609190917299
+      },
+      {
+        "group": "typing rate",
+        "n_features": 4,
+        "importance": 0.01845850879333739,
+        "std": 0.0008074993865021938
+      },
+      {
+        "group": "time of day",
+        "n_features": 5,
+        "importance": 0.0008371181952562922,
+        "std": 0.0007784200435834185
+      }
+    ]
+  },
+  "focus_drop": {
+    "horizon_minutes": 15,
+    "distracted_minutes_threshold": 5,
+    "roc_auc": 0.6295,
+    "baseline_roc_auc_time_since_break": 0.6006,
+    "average_precision": 0.2241,
+    "baseline_average_precision": 0.1716,
+    "brier_score": 0.1104,
+    "positive_rate": 0.1312,
+    "n_train": 35536,
+    "n_test": 12181,
+    "calibrated_threshold": 0.2444,
+    "top_features": [
+      {
+        "feature": "minutes_since_break",
+        "importance": 0.0412705360108905,
+        "std": 0.0025003478333344665
+      },
+      {
+        "feature": "hour_sin",
+        "importance": 0.028732800154024175,
+        "std": 0.006514452011361517
+      },
+      {
+        "feature": "minutes_since_day_start",
+        "importance": 0.015086454685573302,
+        "std": 0.004091879868887427
+      },
+      {
+        "feature": "scroll_events_mean",
+        "importance": 0.013543658761773126,
+        "std": 0.0018592132768184566
+      },
+      {
+        "feature": "app_frac_personal",
+        "importance": 0.010793327244428408,
+        "std": 0.0012246623008418743
+      },
+      {
+        "feature": "day_progress",
+        "importance": 0.010327978952240847,
+        "std": 0.0010135116586495723
+      },
+      {
+        "feature": "is_afternoon_slump",
+        "importance": 0.006515621139861505,
+        "std": 0.001841144176948069
+      },
+      {
+        "feature": "app_frac_development",
+        "importance": 0.003309153923269648,
+        "std": 0.0006841644449149331
+      },
+      {
+        "feature": "idle_mean",
+        "importance": 0.0032348855231848937,
+        "std": 0.0017376391125801455
+      },
+      {
+        "feature": "window_switches_sum",
+        "importance": 0.0031639284530401214,
+        "std": 0.000533756561719079
+      }
+    ]
+  },
+  "reminders": {
+    "roc_auc": {
+      "focus_drop_model": 0.6295,
+      "time_since_break_only": 0.6006
+    },
+    "equal_budget_alerts": {
+      "budget": 202,
+      "recall_ceiling": 0.1264,
+      "timer_interval_minutes": 90,
+      "model": {
+        "strategy": "focus-drop model",
+        "n_alerts": 202,
+        "precision": 0.4356,
+        "recall": 0.0551,
+        "n_drops": 1598,
+        "n_opportunities": 12181
+      },
+      "timer": {
+        "strategy": "fixed 90-minute timer",
+        "n_alerts": 202,
+        "precision": 0.1832,
+        "recall": 0.0232,
+        "n_drops": 1598,
+        "n_opportunities": 12181
+      }
+    },
+    "engine_volume": {
+      "break_reminders_per_day": 3.1968911917098444,
+      "focus_nudges_per_day": 2.7979274611398965,
+      "breaks_from_model": 357,
+      "breaks_from_time_limit": 260,
+      "share_of_windows_above_threshold": 0.0772,
+      "drop_threshold_mode": "percentile",
+      "drop_probability_threshold": 0.2444,
+      "drop_threshold_calibrated": 0.2444,
+      "drop_probability_p95": 0.2804
+    }
+  },
+  "analytics": {
+    "user_days": 193,
+    "tracked_hours_per_day": 8.26,
+    "focused_hours_per_day": 5.41,
+    "distracted_minutes_per_day": 57.4,
+    "meeting_minutes_per_day": 63.7,
+    "break_minutes_per_day": 51.2,
+    "breaks_per_day": 5.33,
+    "longest_stretch_minutes": 141.0,
+    "mean_focus_score": 55.04
+  },
+  "focus_score_agreement": {
+    "n_user_days": 193,
+    "mean_absolute_error": 1.64,
+    "mean_error": -1.161,
+    "max_absolute_error": 6.51,
+    "correlation": 0.9857
+  },
+  "correlations": [
+    {
+      "name": "Focus Score vs self-rated productivity",
+      "r": 0.2495,
+      "p_value": 0.00087,
+      "n": 175,
+      "significant_at_05": true
+    },
+    {
+      "name": "hours logged vs self-rated productivity",
+      "r": 0.0312,
+      "p_value": 0.68157,
+      "n": 175,
+      "significant_at_05": false
+    },
+    {
+      "name": "focus ratio vs self-rated productivity",
+      "r": 0.3306,
+      "p_value": 1e-05,
+      "n": 175,
+      "significant_at_05": true
+    },
+    {
+      "name": "Focus Score vs self-rated energy",
+      "r": 0.2234,
+      "p_value": 0.00296,
+      "n": 175,
+      "significant_at_05": true
+    }
+  ],
+  "figures": {
+    "figure1_preprocessing": "D:\\FocusTrack \u2014 Intelligent Work Monitoring\\reports\\figures\\figure1_preprocessing_pipeline.png",
+    "figure2_architecture": "D:\\FocusTrack \u2014 Intelligent Work Monitoring\\reports\\figures\\figure2_architecture.png",
+    "figure3_diagnostics": "D:\\FocusTrack \u2014 Intelligent Work Monitoring\\reports\\figures\\figure3_model_diagnostics.png",
+    "figure5_daily_rhythm": "D:\\FocusTrack \u2014 Intelligent Work Monitoring\\reports\\figures\\figure5_daily_rhythm.png",
+    "figure4_example_day": "D:\\FocusTrack \u2014 Intelligent Work Monitoring\\reports\\figures\\figure4_example_day.png"
+  },
+  "milestone2_reference": {
+    "focus_state": {
+      "Rule-based heuristic": {
+        "accuracy": 0.883,
+        "macro_f1": 0.747,
+        "f1_distracted": 0.195
+      },
+      "Logistic Regression": {
+        "accuracy": 0.956,
+        "macro_f1": 0.938,
+        "f1_distracted": 0.804,
+        "cv": "0.939 +/- 0.006"
+      },
+      "Random Forest": {
+        "accuracy": 0.966,
+        "macro_f1": 0.946,
+        "f1_distracted": 0.831,
+        "cv": "0.949 +/- 0.003"
+      },
+      "Gradient Boosting": {
+        "accuracy": 0.961,
+        "macro_f1": 0.943,
+        "f1_distracted": 0.819,
+        "cv": "0.946 +/- 0.004"
+      }
+    },
+    "window_accuracy": {
+      "single_state": 0.997,
+      "mixed_state": 0.834
+    },
+    "focus_drop": {
+      "roc_auc": 0.61,
+      "baseline_roc_auc": 0.58,
+      "precision": 0.19,
+      "baseline_precision": 0.16,
+      "recall": 0.38,
+      "baseline_recall": 0.31
+    },
+    "engine_volume": {
+      "break_reminders_per_day": 3.0,
+      "focus_nudges_per_day": 1.8
+    },
+    "analytics": {
+      "focused_hours_per_day": 5.5,
+      "distracted_minutes_per_day": 51,
+      "breaks_per_day": 5.2,
+      "longest_stretch_minutes": 167,
+      "focus_score_mae": 1.2
+    },
+    "correlations": {
+      "focus_score_r": 0.23,
+      "focus_score_p": 0.002,
+      "hours_logged_r": 0.14,
+      "hours_logged_p": 0.06
+    },
+    "dataset": {
+      "minute_records": 384515,
+      "user_days": 768,
+      "windows": 76318,
+      "applications": 37,
+      "features": 31
+    }
+  }
+}

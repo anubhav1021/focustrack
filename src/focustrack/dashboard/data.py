@@ -64,7 +64,12 @@ def load_dashboard_data(cfg: Config | None = None) -> DashboardData:
     windows["window_start"] = pd.to_datetime(windows["window_start"])
 
     state_column = "state_label"
-    if models_available(cfg):
+    if "predicted_state" in windows.columns:
+        # `focustrack evaluate` writes the scored window table, so a deployed
+        # dashboard needs no model files at all - which matters because the
+        # fitted forest is over 100 MB and the predictions are a few columns.
+        state_column = "predicted_state"
+    elif models_available(cfg):
         try:
             bundle = load_bundle(cfg)
             features = feature_matrix(windows)

@@ -1,4 +1,10 @@
-# --- core: data, pipeline, models, figures -------------------------------
+# Runtime requirements for the pipeline and the dashboard.
+#
+# The desktop agent's dependencies (pynput, plyer) are deliberately NOT here:
+# they are desktop-only, and a headless deployment neither needs nor can use
+# them. Install them with:  pip install -e ".[agent]"
+
+# --- core: data, pipeline, models, figures ---------------------------------
 numpy>=1.24
 pandas>=2.0
 scikit-learn>=1.3
@@ -7,15 +13,8 @@ matplotlib>=3.7
 pyyaml>=6.0
 joblib>=1.3
 cryptography>=41.0
+pyarrow>=14.0
 
-# --- layer 5: dashboard ---------------------------------------------------
+# --- layer 5: dashboard ----------------------------------------------------
 streamlit>=1.30
 altair>=5.0
-
-# --- layer 1: desktop agent (optional; the agent degrades gracefully) -----
-psutil>=5.9
-pynput>=1.7
-plyer>=2.1
-
-# --- dev ------------------------------------------------------------------
-pytest>=7.4
