@@ -1,0 +1,21 @@
+# --- core: data, pipeline, models, figures -------------------------------
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+scipy>=1.10
+matplotlib>=3.7
+pyyaml>=6.0
+joblib>=1.3
+cryptography>=41.0
+
+# --- layer 5: dashboard ---------------------------------------------------
+streamlit>=1.30
+altair>=5.0
+
+# --- layer 1: desktop agent (optional; the agent degrades gracefully) -----
+psutil>=5.9
+pynput>=1.7
+plyer>=2.1
+
+# --- dev ------------------------------------------------------------------
+pytest>=7.4

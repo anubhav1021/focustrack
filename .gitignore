@@ -1,0 +1,35 @@
+# --- environment ------------------------------------------------------------
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- generated artefacts ----------------------------------------------------
+# Everything below is reproducible with `focustrack all`, so none of it is
+# tracked. The .gitkeep files preserve the directory layout.
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+models/*
+!models/.gitkeep
+reports/*
+!reports/figures/
+reports/figures/*
+!reports/figures/.gitkeep
+
+# --- the user's own data ----------------------------------------------------
+# The live agent's store holds a minute-by-minute record of someone's working
+# day. It never belongs in version control.
+focustrack_store/
+*.db
+*.db-wal
+*.db-shm
+*.key

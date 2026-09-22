@@ -1,0 +1,197 @@
+# ============================================================================
+# FocusTrack - Remote Work Productivity Booster
+# Every tunable constant quoted in the Milestone 2 report lives here.
+# ============================================================================
+
+project:
+  name: FocusTrack
+  seed: 26138
+  timezone: "Asia/Kolkata"          # IST - the local timezone of the cohort
+
+# --- Section 2: Dataset -----------------------------------------------------
+dataset:
+  n_users: 40
+  n_workdays: 20
+  start_date: "2026-08-03"          # a Monday
+  # 12 developers + 7 each of the other four roles = 40 participants
+  role_counts:
+    developer: 12
+    designer: 7
+    writer: 7
+    analyst: 7
+    support: 7
+  # ~4% of user-days are missing (leave / agent never started) -> ~768 user-days
+  day_present_prob: 0.96
+  workday:
+    mean_minutes: 503               # ~8.4 h tracked per day
+    sd_minutes: 55
+    min_minutes: 300
+    max_minutes: 660
+  chronotype_start_hour:            # local clock hour the day begins
+    morning: 8.0
+    intermediate: 9.25
+    evening: 10.5
+  start_hour_sd: 0.55
+  survey_nonresponse_rate: 0.08     # 8% of daily surveys are not returned
+
+# --- Section 2: behaviour model --------------------------------------------
+behaviour:
+  # Base per-minute hazard of leaving the Focused state for Distracted.
+  focus_to_distract_base: 0.0081
+  # Distraction risk rises with minutes since the last break.
+  fatigue_per_minute: 0.000163       # added hazard per minute since last break
+  fatigue_cap: 0.032
+  # The 14:00-16:00 post-lunch slump.
+  slump_window: [14.0, 16.0]
+  slump_multiplier: 1.75
+  # Personal distractibility trait, drawn per user.
+  distractibility_beta: [2.0, 3.2]  # Beta(a, b) -> mean ~0.38
+  distractibility_multiplier: 1.6   # hazard scale at trait = 1.0
+  # Mean dwell time (minutes) in each state before a transition is considered.
+  mean_dwell:
+    Focused: 17.0
+    Distracted: 6.5
+    Break: 9.0
+    Meeting: 34.0
+  distract_to_focus: 0.16           # per-minute recovery hazard
+  # Breaks
+  break_hazard_base: 0.0024
+  break_hazard_per_minute: 0.00021  # pressure to take a break grows with fatigue
+  break_length_gamma: [2.0, 3.4]    # Gamma(shape, scale) minutes -> mean ~6.8
+  lunch_window: [12.5, 14.0]        # a long break is likely in this window
+  lunch_probability: 0.80           # not everyone stops properly for lunch
+  lunch_minutes: [20, 42]
+  # Meetings per day by role (Poisson lambda) and duration in minutes
+  meetings_lambda:
+    developer: 1.8
+    designer: 1.9
+    writer: 1.1
+    analyst: 2.1
+    support: 2.6
+  meeting_minutes: [22, 58]
+  # Realistic overlaps deliberately built into the emissions
+  overlap:
+    reading_looks_idle: 0.15        # P(a Focused minute is a low-input reading minute)
+    daydream_in_work_app: 0.28      # P(a Distracted minute still shows a work app)
+    personal_chat_burst: 0.18       # P(a Distracted minute types as fast as focused work)
+    ambiguous_browsing: 0.30        # P(distracted browsing happens in a work browser)
+
+# --- Section 3: Preprocessing ----------------------------------------------
+preprocessing:
+  # Step 2 - timezone repair
+  earliest_plausible_local_hour: 6.0   # nobody starts work before 06:00 IST
+  tz_broken_agent_fraction: 0.025      # one agent in 40 logs in UTC
+  # Step 3 - duplicate uploads
+  duplicate_upload_fraction: 0.008
+  # Step 4 - impossible values
+  max_keystrokes_per_min: 600          # stuck key above this
+  idle_seconds_range: [0, 60]
+  impossible_injection_fraction: 0.003
+  # Step 5 - gaps
+  max_gap_fill_minutes: 2              # 1-2 min gaps are interpolated
+  dropout_fraction: 0.0032             # agent-offline gaps injected
+  dropout_length: [3, 25]
+  hiccup_fraction: 0.0022              # brief 1-2 min agent stalls (recoverable)
+  hiccup_length: [1, 2]
+  # Step 8 - break detection
+  idle_minute_threshold_seconds: 45    # a minute counts as idle above this
+  min_break_minutes: 3                 # 3+ consecutive idle minutes = a break
+  # Step 10 - windowing
+  window_minutes: 5
+  min_minutes_per_window: 3            # sparser windows are dropped
+  # Step 9 - per-user normalisation
+  normalisation: robust                # median / IQR computed within each user
+
+# --- Section 3: split -------------------------------------------------------
+split:
+  n_test_users_per_role: 2             # 10 unseen test users, 2 per role
+  cv_folds: 5
+
+# --- Section 4: models ------------------------------------------------------
+models:
+  focus_state:
+    selection_metric: macro_f1
+    class_weight: balanced
+    logistic_regression:
+      C: 1.0
+      max_iter: 2000
+    random_forest:
+      n_estimators: 300
+      min_samples_leaf: 2
+      max_features: sqrt
+      n_jobs: -1
+    # Histogram-binned gradient boosting (Friedman's algorithm, binned splits).
+    # Multiclass boosting fits one tree per class per iteration, so the binned
+    # implementation is what makes the 4-class comparison practical to re-run.
+    gradient_boosting:
+      max_iter: 300
+      learning_rate: 0.08
+      max_depth: 4
+      max_leaf_nodes: 31
+      early_stopping: false
+  focus_drop:
+    horizon_minutes: 15               # look 15 minutes ahead
+    distracted_minutes_threshold: 5   # >= 5 distracted minutes = a "drop"
+    max_iter: 300
+    learning_rate: 0.06
+    max_depth: 4
+    max_leaf_nodes: 31
+    early_stopping: false
+  # Permutation importance is re-scored per feature, so keep repeats modest.
+  permutation_repeats: 5
+
+# --- Section 4: Adaptive Reminder Engine ------------------------------------
+reminders:
+  # How the break threshold is set.
+  #   percentile - the quantile below, calibrated on the training distribution
+  #                of predicted probabilities (the default)
+  #   absolute   - the literal 0.45 published in the report
+  #
+  # These are not equivalent. A model trained on a ~14% base rate is well
+  # calibrated when its probabilities stay low - here the 95th percentile is
+  # about 0.28 - so a fixed 0.45 is almost never reached. Under `absolute`,
+  # only 14% of break reminders come from the model and the rest fall through
+  # to the 100-minute rule: the adaptive path is effectively dead code.
+  # Calibrating instead puts 58% of reminders on the model and produces ~3.2
+  # break reminders per day, matching the volume the report observed.
+  # `reports/results.json` records how often the threshold is actually cleared.
+  drop_threshold_mode: percentile
+  drop_threshold_percentile: 0.92
+  drop_probability_threshold: 0.45   # used when mode is `absolute`
+  min_minutes_since_break: 20
+  hard_break_minutes: 100             # unconditional break suggestion
+  distraction_nudge_minutes: 10
+  min_gap_between_notifications: 15
+  max_breaks_per_day: 6
+  max_nudges_per_day: 4
+  protected_states: [Meeting, Break]  # never interrupt these
+  timer_baseline_minutes: 90          # the fixed-timer control condition
+
+# --- Section 4: Focus Score -------------------------------------------------
+focus_score:
+  w_focus_ratio: 0.55                 # R
+  w_switch_load: 0.25                 # 1 - S
+  w_break_balance: 0.20               # B
+  switch_cap_per_hour: 60.0           # switches/h that map to S = 1
+  healthy_stretch_minutes: 90         # full marks at or below this
+  stretch_zero_minutes: 180           # B reaches 0 here
+
+# --- Layer 2: storage -------------------------------------------------------
+storage:
+  db_path: "focustrack_store/focustrack.db"
+  key_path: "focustrack_store/store.key"
+  encrypt: true
+
+# --- Layer 1 + 3: live agent ------------------------------------------------
+agent:
+  sample_seconds: 60                  # one activity record per minute
+  process_every_minutes: 5            # the processing engine cadence
+  self_report_prompt_hour: 18         # end-of-day survey prompt
+
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  models: "models"
+  reports: "reports"
+  figures: "reports/figures"

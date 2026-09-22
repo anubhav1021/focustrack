@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "focustrack"
+version = "0.2.0"
+description = "FocusTrack - Remote Work Productivity Booster: work-hour, break and focus tracking with adaptive reminders and analytics"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Ahmed Bin Asad" },
+    { name = "Kunsh Kakkar" },
+    { name = "Anubhav" },
+]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+    "joblib>=1.3",
+    "cryptography>=41.0",
+]
+
+[project.optional-dependencies]
+dashboard = ["streamlit>=1.30", "altair>=5.0"]
+agent = ["psutil>=5.9", "pynput>=1.7", "plyer>=2.1"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+all = [
+    "streamlit>=1.30", "altair>=5.0",
+    "psutil>=5.9", "pynput>=1.7", "plyer>=2.1",
+    "pytest>=7.4",
+]
+
+[project.scripts]
+focustrack = "focustrack.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+filterwarnings = ["ignore::DeprecationWarning"]
